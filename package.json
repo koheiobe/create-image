@@ -4,12 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "execute": "node create-image.js",
+    "create-img": "node create-image.js",
+    "create-svg": "node create-svg.js > test.svg",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "canvas": "^2.9.3"
+    "canvas": "^2.9.3",
+    "svg.js": "^2.7.1",
+    "svgdom": "^0.1.10"
   }
 }
