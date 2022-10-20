@@ -1,18 +1,27 @@
-const { createSVGWindow } = require("svgdom");
+const { optimize, loadConfig } = require("svgo");
 const { readFileSync } = require("fs");
-const audioSvg = readFileSync("./svg/audio.svg");
-const ballTriangle = readFileSync("./svg/ball-triangle.svg");
-const window = createSVGWindow();
-const SVG = require("svg.js")(window);
-const document = window.document;
+const bg = readFileSync("./svg/parts/bg.svg");
+const hito = readFileSync("./svg/parts/hito.svg");
+const maru = readFileSync("./svg/parts/maru.svg");
+const moji = readFileSync("./svg/parts/moji.svg");
+const mono = readFileSync("./svg/parts/mono.svg");
 
-// create svg.js instance
-const canvas = SVG(document.documentElement);
-// Width, heightはsvg画像のwidth, heightと統一する
-canvas.attr("width", "300");
-canvas.attr("height", "300");
+loadConfig().then((config) => {
+  const bgResult = optimize(bg.toString(), config);
+  const hitoResult = optimize(hito.toString(), config);
+  const maruResult = optimize(maru.toString(), config);
+  const mojiResult = optimize(moji.toString(), config);
+  const monoResult = optimize(mono.toString(), config);
 
-canvas.svg(audioSvg.toString());
-canvas.svg(ballTriangle.toString());
+  const svgs = `
+  <svg width="986px" height="986px" xmlns="http://www.w3.org/2000/svg">
+    ${bgResult.data}
+    ${hitoResult.data}
+    ${maruResult.data}
+    ${mojiResult.data}
+    ${monoResult.data}
+  </svg>
+`;
 
-console.log(canvas.svg());
+  console.log(svgs);
+});

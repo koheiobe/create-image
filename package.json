@@ -11,8 +11,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "canvas": "^2.9.3",
-    "svg.js": "^2.7.1",
-    "svgdom": "^0.1.10"
+    "svgo": "^2.8.0"
   }
 }
