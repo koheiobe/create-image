@@ -1,27 +1,65 @@
 const { optimize, loadConfig } = require("svgo");
-const { readFileSync } = require("fs");
-const bg = readFileSync("./svg/parts/bg.svg");
-const hito = readFileSync("./svg/parts/hito.svg");
-const maru = readFileSync("./svg/parts/maru.svg");
-const moji = readFileSync("./svg/parts/moji.svg");
-const mono = readFileSync("./svg/parts/mono.svg");
+const { readFileSync, readdirSync, writeFileSync, mkdirSync } = require("fs");
+const fsExtra = require("fs-extra");
 
-loadConfig().then((config) => {
-  const bgResult = optimize(bg.toString(), config);
-  const hitoResult = optimize(hito.toString(), config);
-  const maruResult = optimize(maru.toString(), config);
-  const mojiResult = optimize(moji.toString(), config);
-  const monoResult = optimize(mono.toString(), config);
+const basePartsPath = "./svg/parts";
+const partsFolderNameList = ["bg", "hito", "maru", "moji", "mono"];
+loadConfig().then(async (config) => {
+  const folderNameFileNameListObj = {};
+  for (const partsFolderName of partsFolderNameList) {
+    const fileNameList = readdirSync(`${basePartsPath}/${partsFolderName}`);
+    folderNameFileNameListObj[partsFolderName] = fileNameList;
+  }
 
-  const svgs = `
-  <svg width="986px" height="986px" xmlns="http://www.w3.org/2000/svg">
-    ${bgResult.data}
-    ${hitoResult.data}
-    ${maruResult.data}
-    ${mojiResult.data}
-    ${monoResult.data}
-  </svg>
-`;
+  /**
+   * partsListWithIdObj
+   *
+   * { fileId: [ [folderName, parts], [folderName, parts], [folderName, parts] ] }
+   *
+   * ex:
+   * {
+   *   'bg-hito-51-maru-moji-do-mono-51': [
+   *     ['bg', 'bg.svg']
+   *     ['hito', 'hito.svg']
+   *     ['maru', 'maru.svg']
+   *     ['moji', 'moji.svg']
+   *     ['mono', 'mono.svg']
+   *   ]
+   * }
+   **/
+  const partsListWithIdObj = {};
+  const getParts = (index = 0, partsAry = []) => {
+    const folderName = partsFolderNameList[index];
+    for (const fileNameList of folderNameFileNameListObj[folderName]) {
+      const newPartsAry = [...partsAry, [folderName, fileNameList]];
+      if (folderNameFileNameListObj[partsFolderNameList[index + 1]]) {
+        getParts(index + 1, newPartsAry);
+      } else {
+        const id = newPartsAry
+          .map(([_, partsName]) => partsName.replace(/.svg/g, ""))
+          .join("-");
+        partsListWithIdObj[id] = newPartsAry;
+      }
+    }
+  };
+  getParts();
 
-  console.log(svgs);
+  const outputsPath = `${basePartsPath}/outputs`;
+  await fsExtra.remove(outputsPath);
+  mkdirSync(outputsPath);
+  for (const [id, partsList] of Object.entries(partsListWithIdObj)) {
+    const optimizedParts = partsList
+      .map(([folderName, parts]) =>
+        readFileSync(`${basePartsPath}/${folderName}/${parts}`)
+      )
+      .map((binary) => optimize(binary.toString(), config).data)
+      .join("");
+    const svg = `
+      <svg width="986px" height="986px" xmlns="http://www.w3.org/2000/svg">
+      ${optimizedParts}
+      </svg>
+    `;
+
+    writeFileSync(`${outputsPath}/${id}.svg`, svg);
+  }
 });
