@@ -8,13 +8,8 @@ module.exports = {
           inlineStyles: {
             onlyMatchedOnce: false,
           },
+          cleanupIDs: false,
         },
-      },
-    },
-    {
-      name: "removeAttrs",
-      params: {
-        attrs: "(width|height)",
       },
     },
     "removeXMLNS",
